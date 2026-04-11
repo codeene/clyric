@@ -3,16 +3,37 @@
   "version": "1.0.0",
   "description": "Real-time Spotify now-playing overlay for OBS with synced lyrics and live config.",
   "main": "server.js",
+  "bin": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "pkg . --targets node18-win-x64 --output dist/NowPlaying.exe"
+  },
+  "pkg": {
+    "assets": [
+      "*.html"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ]
   },
   "dependencies": {
     "express": "^5.2.1",
+    "node-forge": "^1.4.0",
     "open": "^11.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["spotify", "obs", "overlay", "now-playing", "lyrics", "streaming"],
-  "license": "MIT"
+  "keywords": [
+    "spotify",
+    "obs",
+    "overlay",
+    "now-playing",
+    "lyrics",
+    "streaming"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  }
 }

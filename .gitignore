@@ -1,3 +1,17 @@
+# Dependencies
 node_modules/
+
+# Generated certs (created on first run per-machine)
+cert.pem
+key.pem
+ca.crt
+
+# User data
 credentials.json
 settings.json
+
+# Build output
+dist/
+
+# Claude Code internals
+.claude/
