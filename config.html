@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Now Playing — Config</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0c0c10;
+  --surface:  #131318;
+  --raised:   #1a1a22;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.12);
+  --text:     #f0eef8;
+  --muted:    rgba(255,255,255,0.38);
+  --accent:   #1db954;
+  --accent-d: rgba(29,185,84,0.15);
+  --radius:   12px;
+  --panel:    320px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Shell ───────────────────────────────────────────────────── */
+.shell {
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  grid-template-columns: 1fr var(--panel);
+  height: 100vh;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.2px;
+}
+
+.logo-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.header-sep { flex: 1; }
+
+#save-indicator {
+  font-size: 12px;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-weight: 500;
+}
+#save-indicator.show { opacity: 1; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--raised);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.18); }
+.btn-accent { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
+.btn-accent:hover { background: #1ed760; border-color: #1ed760; }
+
+/* ── Preview ─────────────────────────────────────────────────── */
+.preview-pane {
+  position: relative;
+  background:
+    radial-gradient(ellipse at 30% 50%, rgba(29,185,84,0.06) 0%, transparent 60%),
+    repeating-conic-gradient(#13131a 0% 25%, #0f0f16 0% 50%) 0 0 / 20px 20px;
+  overflow: hidden;
+}
+
+.preview-pane iframe {
+  border: none;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Settings Panel ──────────────────────────────────────────── */
+.panel {
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Tabs ────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  padding: 12px 12px 0;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 6px;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-bottom: none;
+  transition: color 0.15s, background 0.15s;
+  user-select: none;
+  position: relative;
+  bottom: -1px;
+}
+.tab:hover { color: var(--text); }
+.tab.active {
+  color: var(--text);
+  background: var(--bg);
+  border-color: var(--border);
+  border-bottom-color: var(--bg);
+}
+
+/* ── Tab Content ─────────────────────────────────────────────── */
+.tab-content { display: none; flex: 1; overflow-y: auto; padding: 16px; flex-direction: column; gap: 20px; }
+.tab-content.active { display: flex; }
+
+/* Scrollbar */
+.tab-content::-webkit-scrollbar { width: 4px; }
+.tab-content::-webkit-scrollbar-track { background: transparent; }
+.tab-content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 999px; }
+
+/* ── Section ─────────────────────────────────────────────────── */
+.section-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.card {
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* ── Row ─────────────────────────────────────────────────────── */
+.row {
+  display: flex;
+  align-items: center;
+  padding: 11px 14px;
+  gap: 12px;
+  min-height: 44px;
+}
+.row + .row { border-top: 1px solid var(--border); }
+
+.row-label {
+  flex: 1;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text);
+}
+.row-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 1px;
+  font-weight: 400;
+}
+
+.row-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Toggle ──────────────────────────────────────────────────── */
+.toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; cursor: pointer; }
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.12);
+  border-radius: 999px;
+  transition: background 0.2s;
+}
+.toggle input:checked ~ .toggle-track { background: var(--accent); }
+.toggle-thumb {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s cubic-bezier(0.34,1.3,0.64,1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  pointer-events: none;
+}
+.toggle input:checked ~ .toggle-thumb { transform: translateX(16px); }
+
+/* ── Slider ──────────────────────────────────────────────────── */
+.slider-wrap { display: flex; align-items: center; gap: 8px; }
+.slider-val { font-size: 12px; color: var(--muted); width: 26px; text-align: right; font-variant-numeric: tabular-nums; }
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+/* ── Color ───────────────────────────────────────────────────── */
+.color-btn {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+.color-btn:hover { border-color: rgba(255,255,255,0.35); }
+
+/* ── Chip group (layout, animation) ─────────────────────────── */
+.chips { display: flex; gap: 4px; }
+.chip {
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.chip:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+.chip.active {
+  background: var(--accent-d);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Font grid ───────────────────────────────────────────────── */
+#gfonts-link { display: none; }
+.font-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.font-card {
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.font-card:hover { border-color: var(--border2); background: rgba(255,255,255,0.03); }
+.font-card.active { border-color: var(--accent); background: var(--accent-d); }
+.font-name { font-size: 11px; color: var(--muted); margin-bottom: 4px; font-family: 'Inter', sans-serif; }
+.font-card.active .font-name { color: var(--accent); }
+.font-preview { font-size: 15px; color: var(--text); line-height: 1.2; }
+
+/* ── Number input ─────────────────────────────────────────────── */
+.num-input {
+  width: 52px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: 7px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+.num-input:focus { border-color: var(--accent); }
+
+/* ── Indented sub-rows ───────────────────────────────────────── */
+.sub-card {
+  margin-top: 4px;
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* ── Opacity wrapper ──────────────────────────────────────────── */
+.bg-preview {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.15);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.bg-preview-check {
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(#888 0% 25%, #ccc 0% 50%) 0 0 / 6px 6px;
+  z-index: 0;
+}
+.bg-preview-color { position: absolute; inset: 0; z-index: 1; }
+.bg-preview input[type=color] { position: absolute; inset: -4px; opacity: 0; cursor: pointer; width: calc(100% + 8px); height: calc(100% + 8px); }
+</style>
+</head>
+<body>
+<link id="gfonts-link" rel="stylesheet" href="">
+
+<div class="shell">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-dot"></div>
+      Now Playing
+    </div>
+    <div class="header-sep"></div>
+    <span id="save-indicator">Saved ✓</span>
+    <a href="/overlay" target="_blank" class="btn">Open Overlay ↗</a>
+  </header>
+
+  <!-- Preview -->
+  <div class="preview-pane">
+    <iframe id="preview" src="/overlay" title="Overlay Preview"></iframe>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="panel">
+    <div class="tabs">
+      <div class="tab active" data-tab="elements">Elements</div>
+      <div class="tab" data-tab="lyrics">Lyrics</div>
+      <div class="tab" data-tab="appearance">Appearance</div>
+    </div>
+
+    <!-- ── Elements Tab ── -->
+    <div class="tab-content active" id="tab-elements">
+
+      <!-- Album Art -->
+      <div>
+        <div class="section-label">Album Art</div>
+        <div class="card">
+          <div class="row">
+            <div class="row-label">Show Album Art</div>
+            <label class="toggle">
+              <input type="checkbox" id="albumArt-enabled">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div class="row" id="sub-albumArt-size">
+            <div class="row-label">Size</div>
+            <div class="row-right slider-wrap">
+              <input type="range" id="albumArt-size" min="60" max="240" step="4">
+              <span class="slider-val" id="albumArt-size-val">120</span>
+            </div>
+          </div>
+          <div class="row" id="sub-albumArt-radius">
+            <div class="row-label">Corner Radius</div>
+            <div class="row-right slider-wrap">
+              <input type="range" id="albumArt-borderRadius" min="0" max="60" step="2">
+              <span class="slider-val" id="albumArt-borderRadius-val">12</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Track Info -->
+      <div>
+        <div class="section-label">Track Info</div>
+        <div class="card">
+          <div class="row">
+            <div class="row-label">Song Title</div>
+            <div class="row-right">
+              <div class="color-btn" id="title-color-btn" title="Color">
+                <input type="color" id="title-color" value="#ffffff" style="opacity:0;width:100%;height:100%;cursor:pointer;border:none;">
+              </div>
+              <div class="slider-wrap">
+                <input type="range" id="title-fontSize" min="12" max="48" step="1">
+                <span class="slider-val" id="title-fontSize-val">22</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="title-enabled">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="row-label">Artist</div>
+            <div class="row-right">
+              <div class="color-btn" id="artist-color-btn" title="Color">
+                <input type="color" id="artist-color" value="#b3b3b3" style="opacity:0;width:100%;height:100%;cursor:pointer;border:none;">
+              </div>
+              <div class="slider-wrap">
+                <input type="range" id="artist-fontSize" min="10" max="36" step="1">
+                <span class="slider-val" id="artist-fontSize-val">15</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="artist-enabled">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="row-label">Album Name</div>
+            <div class="row-right">
+              <div class="color-btn" id="album-color-btn" title="Color">
+                <input type="color" id="album-color" value="#888888" style="opacity:0;width:100%;height:100%;cursor:pointer;border:none;">
+              </div>
+              <div class="slider-wrap">
+                <input type="range" id="album-fontSize" min="10" max="30" step="1">
+                <span class="slider-val" id="album-fontSize-val">13</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="album-enabled">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div>
+        <div class="section-label">Progress Bar</div>
+        <div class="card">
+          <div class="row">
+            <div class="row-label">Show Progress Bar</div>
+            <div class="row-right">
+              <div class="color-btn" id="progressBar-color-btn" title="Color">
+                <input type="color" id="progressBar-color" value="#1db954" style="opacity:0;width:100%;height:100%;cursor:pointer;border:none;">
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="progressBar-enabled">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Lyrics Tab ── -->
+    <div class="tab-content" id="tab-lyrics">
+      <div>
+        <div class="section-label">Lyrics</div>
+        <div class="card">
+          <div class="row">
+            <div class="row-label">Show Lyrics</div>
+            <label class="toggle">
+              <input type="checkbox" id="lyrics-enabled">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div class="row">
+            <div class="row-label">Font Size</div>
+            <div class="row-right slider-wrap">
+              <input type="range" id="lyrics-fontSize" min="10" max="30" step="1">
+              <span class="slider-val" id="lyrics-fontSize-val">15</span>
+            </div>
+          </div>
+          <div class="row">
+            <div class="row-label">Active Color</div>
+            <div class="row-right">
+              <div class="color-btn" id="lyrics-activeColor-btn">
+                <input type="color" id="lyrics-activeColor" value="#ffffff" style="opacity:0;width:100%;height:100%;cursor:pointer;border:none;">
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="row-label">Inactive Color</div>
+            <div class="row-right">
+              <div class="color-btn" id="lyrics-inactiveColor-btn">
+                <input type="color" id="lyrics-inactiveColor" value="#555555" style="opacity:0;width:100%;height:100%;cursor:pointer;border:none;">
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="row-label">Lines Above</div>
+            <div class="row-right">
+              <input type="number" class="num-input" id="lyrics-linesAbove" min="0" max="5" value="2">
+            </div>
+          </div>
+          <div class="row">
+            <div class="row-label">Lines Below</div>
+            <div class="row-right">
+              <input type="number" class="num-input" id="lyrics-linesBelow" min="0" max="5" value="2">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Appearance Tab ── -->
+    <div class="tab-content" id="tab-appearance">
+
+      <!-- Font -->
+      <div>
+        <div class="section-label">Font</div>
+        <div class="font-grid" id="font-grid"></div>
+      </div>
+
+      <!-- Layout -->
+      <div>
+        <div class="section-label">Layout</div>
+        <div class="card">
+          <div class="row">
+            <div class="row-label">Direction</div>
+            <div class="row-right chips" id="layout-chips">
+              <button class="chip active" data-val="horizontal">Horizontal</button>
+              <button class="chip" data-val="vertical">Vertical</button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="row-label">Animation</div>
+            <div class="row-right chips" id="animation-chips">
+              <button class="chip active" data-val="slide">Slide</button>
+              <button class="chip" data-val="fade">Fade</button>
+              <button class="chip" data-val="none">None</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Background -->
+      <div>
+        <div class="section-label">Background</div>
+        <div class="card">
+          <div class="row">
+            <div class="row-label">Color &amp; Opacity</div>
+            <div class="row-right">
+              <div class="bg-preview" id="bg-swatch">
+                <div class="bg-preview-check"></div>
+                <div class="bg-preview-color" id="bg-swatch-fill"></div>
+                <input type="color" id="bg-color-picker" value="#0a0a0f">
+              </div>
+              <div class="slider-wrap">
+                <input type="range" id="bg-opacity" min="0" max="100" step="1">
+                <span class="slider-val" id="bg-opacity-val">85</span>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="row-label">Blur</div>
+            <div class="row-right slider-wrap">
+              <input type="range" id="bg-blur" min="0" max="40" step="1">
+              <span class="slider-val" id="bg-blur-val">12</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /panel -->
+</div>
+
+<script>
+const FONTS = {
+  "Default":          { family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", url: "" },
+  "Inter":            { family: "'Inter', sans-serif",            url: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" },
+  "Poppins":          { family: "'Poppins', sans-serif",          url: "https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" },
+  "Montserrat":       { family: "'Montserrat', sans-serif",       url: "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" },
+  "Nunito":           { family: "'Nunito', sans-serif",           url: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" },
+  "Raleway":          { family: "'Raleway', sans-serif",          url: "https://fonts.googleapis.com/css2?family=Raleway:wght@400;600;700&display=swap" },
+  "Oswald":           { family: "'Oswald', sans-serif",           url: "https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&display=swap" },
+  "Playfair Display": { family: "'Playfair Display', serif",      url: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" },
+  "Space Grotesk":    { family: "'Space Grotesk', sans-serif",    url: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" },
+  "DM Sans":          { family: "'DM Sans', sans-serif",          url: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" },
+};
+
+let settings = {};
+let saveTimer = null;
+let currentFont = "Default";
+let layoutVal = "horizontal";
+let animVal   = "slide";
+
+const indicator = document.getElementById("save-indicator");
+
+// ── Tabs ──────────────────────────────────────────────────────
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
+  });
+});
+
+// ── Font grid ─────────────────────────────────────────────────
+function buildFontGrid() {
+  const grid = document.getElementById("font-grid");
+  // Preload all google fonts for preview
+  const allUrls = Object.values(FONTS).map(f => f.url).filter(Boolean);
+  allUrls.forEach(url => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = url;
+    document.head.appendChild(link);
+  });
+
+  Object.keys(FONTS).forEach(name => {
+    const card = document.createElement("div");
+    card.className = "font-card" + (name === currentFont ? " active" : "");
+    card.dataset.font = name;
+    card.innerHTML = `<div class="font-name">${name}</div><div class="font-preview" style="font-family:${FONTS[name].family}">Now Playing</div>`;
+    card.addEventListener("click", () => {
+      currentFont = name;
+      document.querySelectorAll(".font-card").forEach(c => c.classList.remove("active"));
+      card.classList.add("active");
+      scheduleSave();
+    });
+    grid.appendChild(card);
+  });
+}
+
+// ── Chip groups ───────────────────────────────────────────────
+function setupChips(containerId, onChange) {
+  document.querySelectorAll(`#${containerId} .chip`).forEach(chip => {
+    chip.addEventListener("click", () => {
+      document.querySelectorAll(`#${containerId} .chip`).forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      onChange(chip.dataset.val);
+      scheduleSave();
+    });
+  });
+}
+
+setupChips("layout-chips", v => layoutVal = v);
+setupChips("animation-chips", v => animVal = v);
+
+// ── Color swatches ────────────────────────────────────────────
+function syncSwatch(inputId, btnId) {
+  const input = document.getElementById(inputId);
+  const btn   = document.getElementById(btnId);
+  if (!input || !btn) return;
+  btn.style.background = input.value;
+  input.addEventListener("input", () => {
+    btn.style.background = input.value;
+    scheduleSave();
+  });
+}
+["title","artist","album","progressBar","lyrics-activeColor","lyrics-inactiveColor"].forEach(k => {
+  const id = k.includes("-") ? k : k + "-color";
+  const btn = k.includes("-") ? k + "-btn" : k + "-color-btn";
+  syncSwatch(id, btn);
+});
+
+// ── Background swatch ─────────────────────────────────────────
+function syncBgSwatch() {
+  const picker  = document.getElementById("bg-color-picker");
+  const opacity = document.getElementById("bg-opacity");
+  const fill    = document.getElementById("bg-swatch-fill");
+  function update() {
+    const hex = picker.value;
+    const op  = parseInt(opacity.value) / 100;
+    fill.style.background = hex;
+    fill.style.opacity = op;
+  }
+  update();
+  picker.addEventListener("input",  () => { update(); scheduleSave(); });
+  opacity.addEventListener("input", () => { update(); scheduleSave(); });
+}
+syncBgSwatch();
+
+// ── Sliders ───────────────────────────────────────────────────
+function syncSlider(id) {
+  const el  = document.getElementById(id);
+  const val = document.getElementById(id + "-val");
+  if (!el || !val) return;
+  val.textContent = el.value;
+  el.addEventListener("input", () => { val.textContent = el.value; scheduleSave(); });
+}
+["albumArt-size","albumArt-borderRadius","title-fontSize","artist-fontSize","album-fontSize","lyrics-fontSize","bg-opacity","bg-blur"].forEach(syncSlider);
+
+// ── Toggles ───────────────────────────────────────────────────
+["albumArt-enabled","title-enabled","artist-enabled","album-enabled","progressBar-enabled","lyrics-enabled"].forEach(id => {
+  document.getElementById(id)?.addEventListener("change", scheduleSave);
+});
+document.querySelectorAll(".num-input").forEach(el => el.addEventListener("input", scheduleSave));
+
+// ── Populate UI from settings ─────────────────────────────────
+function populateUI(s) {
+  settings = s;
+
+  const set      = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  const setCheck = (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; };
+
+  setCheck("albumArt-enabled",    s.albumArt.enabled);
+  set("albumArt-size",            s.albumArt.size);
+  set("albumArt-borderRadius",    s.albumArt.borderRadius);
+  syncSliderVal("albumArt-size");
+  syncSliderVal("albumArt-borderRadius");
+
+  setCheck("title-enabled",  s.title.enabled);
+  set("title-fontSize",      s.title.fontSize);
+  set("title-color",         s.title.color);
+  syncSliderVal("title-fontSize");
+  document.getElementById("title-color-btn").style.background = s.title.color;
+
+  setCheck("artist-enabled", s.artist.enabled);
+  set("artist-fontSize",     s.artist.fontSize);
+  set("artist-color",        s.artist.color);
+  syncSliderVal("artist-fontSize");
+  document.getElementById("artist-color-btn").style.background = s.artist.color;
+
+  setCheck("album-enabled",  s.album.enabled);
+  set("album-fontSize",      s.album.fontSize);
+  set("album-color",         s.album.color);
+  syncSliderVal("album-fontSize");
+  document.getElementById("album-color-btn").style.background = s.album.color;
+
+  setCheck("progressBar-enabled", s.progressBar.enabled);
+  set("progressBar-color",        s.progressBar.color);
+  document.getElementById("progressBar-color-btn").style.background = s.progressBar.color;
+
+  setCheck("lyrics-enabled",         s.lyrics.enabled);
+  set("lyrics-fontSize",             s.lyrics.fontSize);
+  set("lyrics-activeColor",          s.lyrics.activeColor);
+  set("lyrics-inactiveColor",        s.lyrics.inactiveColor);
+  set("lyrics-linesAbove",           s.lyrics.linesAbove);
+  set("lyrics-linesBelow",           s.lyrics.linesBelow);
+  syncSliderVal("lyrics-fontSize");
+  document.getElementById("lyrics-activeColor-btn").style.background   = s.lyrics.activeColor;
+  document.getElementById("lyrics-inactiveColor-btn").style.background = s.lyrics.inactiveColor;
+
+  // Layout chips
+  layoutVal = s.layout || "horizontal";
+  document.querySelectorAll("#layout-chips .chip").forEach(c => c.classList.toggle("active", c.dataset.val === layoutVal));
+
+  animVal = s.animation || "slide";
+  document.querySelectorAll("#animation-chips .chip").forEach(c => c.classList.toggle("active", c.dataset.val === animVal));
+
+  // Background
+  const bg = parseRgba(s.background.color);
+  set("bg-color-picker", bg.hex);
+  set("bg-opacity",       bg.opacity);
+  set("bg-blur",          s.background.blur);
+  syncSliderVal("bg-opacity");
+  syncSliderVal("bg-blur");
+  syncBgSwatch();
+
+  // Font
+  currentFont = s.font || "Default";
+  document.querySelectorAll(".font-card").forEach(c => c.classList.toggle("active", c.dataset.font === currentFont));
+}
+
+function syncSliderVal(id) {
+  const el  = document.getElementById(id);
+  const val = document.getElementById(id + "-val");
+  if (el && val) val.textContent = el.value;
+}
+
+// ── Collect ───────────────────────────────────────────────────
+function collectSettings() {
+  const get    = id => document.getElementById(id)?.value;
+  const getNum = id => Number(document.getElementById(id)?.value);
+  const getBool= id => document.getElementById(id)?.checked ?? false;
+  return {
+    albumArt:    { enabled: getBool("albumArt-enabled"),    size: getNum("albumArt-size"),      borderRadius: getNum("albumArt-borderRadius") },
+    title:       { enabled: getBool("title-enabled"),       fontSize: getNum("title-fontSize"),  color: get("title-color") },
+    artist:      { enabled: getBool("artist-enabled"),      fontSize: getNum("artist-fontSize"), color: get("artist-color") },
+    album:       { enabled: getBool("album-enabled"),       fontSize: getNum("album-fontSize"),  color: get("album-color") },
+    progressBar: { enabled: getBool("progressBar-enabled"), color: get("progressBar-color") },
+    lyrics:      { enabled: getBool("lyrics-enabled"), fontSize: getNum("lyrics-fontSize"), activeColor: get("lyrics-activeColor"), inactiveColor: get("lyrics-inactiveColor"), linesAbove: getNum("lyrics-linesAbove"), linesBelow: getNum("lyrics-linesBelow") },
+    layout:    layoutVal,
+    animation: animVal,
+    background: { color: buildRgba(get("bg-color-picker"), getNum("bg-opacity")), blur: getNum("bg-blur") },
+    font:      currentFont,
+  };
+}
+
+// ── Save ──────────────────────────────────────────────────────
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    const s = collectSettings();
+    try {
+      await fetch("/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) });
+      document.getElementById("preview").contentWindow.location.reload();
+      indicator.classList.add("show");
+      setTimeout(() => indicator.classList.remove("show"), 1800);
+    } catch {}
+  }, 500);
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function parseRgba(str) {
+  const m = str.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+  if (m) {
+    const hex = "#" + [m[1],m[2],m[3]].map(n => parseInt(n).toString(16).padStart(2,"0")).join("");
+    return { hex, opacity: m[4] !== undefined ? Math.round(parseFloat(m[4]) * 100) : 100 };
+  }
+  return { hex: str, opacity: 100 };
+}
+
+function buildRgba(hex, opacity) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${(opacity/100).toFixed(2)})`;
+}
+
+// ── Init ──────────────────────────────────────────────────────
+async function init() {
+  buildFontGrid();
+  try {
+    const res = await fetch("/settings");
+    populateUI(await res.json());
+  } catch {}
+}
+init();
+</script>
+</body>
+</html>

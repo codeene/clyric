@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Now Playing Overlay</title>
+<link id="gfont" rel="stylesheet" href="">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: transparent;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--font, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 100%;
+    height: 100%;
+    padding: 16px;
+  }
+
+  /* ── Card ── */
+  #card {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 16px;
+    backdrop-filter: blur(var(--blur, 12px));
+    -webkit-backdrop-filter: blur(var(--blur, 12px));
+    background: var(--bg-color, rgba(10,10,15,0.85));
+    max-width: 720px;
+    width: 100%;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    will-change: opacity, transform;
+  }
+
+  #card.hidden { opacity: 0; pointer-events: none; }
+  #card.anim-slide { transform: translateY(0); }
+  #card.anim-slide.hidden { transform: translateY(12px); }
+
+  /* ── Album Art ── */
+  #art-wrap {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  #album-art {
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease;
+  }
+
+  #album-art.popin {
+    animation: artPop 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  }
+
+  @keyframes artPop {
+    from { transform: scale(0.85); opacity: 0.4; }
+    to   { transform: scale(1);    opacity: 1;   }
+  }
+
+  /* ── Right column ── */
+  #info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  #track-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    line-height: 1.2;
+  }
+
+  #track-artist {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 400;
+    opacity: 0.85;
+  }
+
+  #track-album {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 400;
+    opacity: 0.6;
+  }
+
+  /* ── Progress bar ── */
+  #progress-wrap {
+    margin-top: 8px;
+    height: 3px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+    overflow: hidden;
+  }
+
+  #progress-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--progress-color, #1db954);
+    transition: width 1s linear;
+  }
+
+  /* ── Lyrics ── */
+  #lyrics-wrap {
+    margin-top: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #lyrics-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+    will-change: transform;
+  }
+
+  .lyric-line {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 0.3s ease, font-size 0.3s ease, color 0.3s ease, transform 0.3s ease;
+    transform-origin: left center;
+  }
+
+  .lyric-line.active {
+    transform: scale(1.04);
+    transform-origin: left center;
+  }
+
+  /* ── Vertical layout ── */
+  body.layout-vertical #card { flex-direction: column; align-items: flex-start; }
+  body.layout-vertical #art-wrap { width: 100%; }
+</style>
+</head>
+<body class="layout-horizontal">
+
+<div id="root">
+  <div id="card" class="anim-slide">
+    <div id="art-wrap">
+      <img id="album-art" src="" alt="" width="120" height="120" style="border-radius:12px;" />
+    </div>
+    <div id="info">
+      <div id="track-title" style="font-size:22px; color:#fff;"></div>
+      <div id="track-artist" style="font-size:15px; color:#b3b3b3;"></div>
+      <div id="track-album" style="font-size:13px; color:#888;"></div>
+      <div id="progress-wrap">
+        <div id="progress-fill" style="width:0%"></div>
+      </div>
+      <div id="lyrics-wrap">
+        <div id="lyrics-inner"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const FONTS = {
+    "Default":         { family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", url: "" },
+    "Inter":           { family: "'Inter', sans-serif",           url: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" },
+    "Poppins":         { family: "'Poppins', sans-serif",         url: "https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" },
+    "Montserrat":      { family: "'Montserrat', sans-serif",      url: "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" },
+    "Nunito":          { family: "'Nunito', sans-serif",          url: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" },
+    "Raleway":         { family: "'Raleway', sans-serif",         url: "https://fonts.googleapis.com/css2?family=Raleway:wght@400;600;700&display=swap" },
+    "Oswald":          { family: "'Oswald', sans-serif",          url: "https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&display=swap" },
+    "Playfair Display":{ family: "'Playfair Display', serif",     url: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" },
+    "Space Grotesk":   { family: "'Space Grotesk', sans-serif",   url: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" },
+    "DM Sans":         { family: "'DM Sans', sans-serif",         url: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" },
+  };
+
+  function applyFont(name) {
+    const f = FONTS[name] || FONTS["Default"];
+    document.getElementById("gfont").href = f.url;
+    document.documentElement.style.setProperty("--font", f.family);
+  }
+
+  // ── State ──────────────────────────────────────────────────────
+  let settings = {};
+  let currentTrackId = null;
+  let lyrics = { synced: false, lines: [] };
+  let currentLyricIndex = -1;
+  let progressMs = 0;
+  let lastPollTime = 0;
+  let isPlaying = false;
+
+  const card        = document.getElementById("card");
+  const artWrap     = document.getElementById("art-wrap");
+  const albumArt    = document.getElementById("album-art");
+  const titleEl     = document.getElementById("track-title");
+  const artistEl    = document.getElementById("track-artist");
+  const albumEl     = document.getElementById("track-album");
+  const progWrap    = document.getElementById("progress-wrap");
+  const progFill    = document.getElementById("progress-fill");
+  const lyricsWrap  = document.getElementById("lyrics-wrap");
+  const lyricsInner = document.getElementById("lyrics-inner");
+
+  function applySettings(s) {
+    settings = s;
+
+    document.body.classList.toggle("layout-vertical", s.layout === "vertical");
+    document.body.classList.toggle("layout-horizontal", s.layout !== "vertical");
+
+    card.style.setProperty("--bg-color", s.background.color);
+    card.style.setProperty("--blur", s.background.blur + "px");
+    card.style.setProperty("--progress-color", s.progressBar.color);
+
+    applyFont(s.font || "Default");
+
+    artWrap.style.display = s.albumArt.enabled ? "" : "none";
+    albumArt.style.width  = s.albumArt.size + "px";
+    albumArt.style.height = s.albumArt.size + "px";
+    albumArt.style.borderRadius = s.albumArt.borderRadius + "px";
+
+    titleEl.style.display   = s.title.enabled ? "" : "none";
+    titleEl.style.fontSize  = s.title.fontSize + "px";
+    titleEl.style.color     = s.title.color;
+
+    artistEl.style.display  = s.artist.enabled ? "" : "none";
+    artistEl.style.fontSize = s.artist.fontSize + "px";
+    artistEl.style.color    = s.artist.color;
+
+    albumEl.style.display   = s.album.enabled ? "" : "none";
+    albumEl.style.fontSize  = s.album.fontSize + "px";
+    albumEl.style.color     = s.album.color;
+
+    progWrap.style.display     = s.progressBar.enabled ? "" : "none";
+    progFill.style.background  = s.progressBar.color;
+
+    lyricsWrap.style.display = s.lyrics.enabled ? "" : "none";
+    renderLyrics();
+  }
+
+  async function fetchSettings() {
+    try { const r = await fetch("/settings"); applySettings(await r.json()); } catch {}
+  }
+
+  async function fetchNowPlaying() {
+    try {
+      const r = await fetch("/now-playing");
+      const data = await r.json();
+      lastPollTime = Date.now();
+      if (!data.is_playing) { hideCard(); return; }
+      showCard();
+      isPlaying = data.is_playing;
+      progressMs = data.progress_ms;
+      if (data.track_id !== currentTrackId) { currentTrackId = data.track_id; await onTrackChange(data); }
+      updateProgress(data.progress_ms, data.duration_ms);
+    } catch {}
+  }
+
+  async function onTrackChange(data) {
+    card.classList.add("hidden");
+    await sleep(350);
+    titleEl.textContent  = data.title;
+    artistEl.textContent = data.artist;
+    albumEl.textContent  = data.album;
+    if (albumArt.src !== data.album_art_url) {
+      albumArt.src = data.album_art_url || "";
+      albumArt.onload = () => { albumArt.classList.remove("popin"); void albumArt.offsetWidth; albumArt.classList.add("popin"); };
+    }
+    currentLyricIndex = -1;
+    lyrics = { synced: false, lines: [] };
+    lyricsInner.innerHTML = "";
+    card.classList.remove("hidden");
+    fetchLyrics(data.title, data.artist, data.album, data.duration_ms);
+  }
+
+  async function fetchLyrics(title, artist, album, duration) {
+    try {
+      const r = await fetch(`/lyrics?${new URLSearchParams({ title, artist, album, duration })}`);
+      lyrics = await r.json();
+      currentLyricIndex = -1;
+      renderLyrics();
+    } catch {}
+  }
+
+  function renderLyrics() {
+    if (!settings.lyrics?.enabled) return;
+    if (!lyrics.lines.length) { lyricsInner.innerHTML = ""; return; }
+    const s = settings.lyrics;
+    const above = s.linesAbove ?? 2;
+    const below = s.linesBelow ?? 2;
+    const total = above + 1 + below;
+    const idx = currentLyricIndex < 0 ? 0 : currentLyricIndex;
+    const window = [];
+    for (let i = idx - above; i <= idx + below; i++) {
+      window.push(i >= 0 && i < lyrics.lines.length ? { ...lyrics.lines[i], relIdx: i - idx } : { text: "", relIdx: i - idx, empty: true });
+    }
+    while (lyricsInner.children.length < total) { const d = document.createElement("div"); d.className = "lyric-line"; lyricsInner.appendChild(d); }
+    while (lyricsInner.children.length > total) lyricsInner.removeChild(lyricsInner.lastChild);
+    window.forEach((line, i) => {
+      const el = lyricsInner.children[i];
+      el.textContent = line.text;
+      const isActive = line.relIdx === 0;
+      el.classList.toggle("active", isActive);
+      const dist = Math.abs(line.relIdx);
+      el.style.fontSize   = (isActive ? s.fontSize * 1.08 : s.fontSize) + "px";
+      el.style.color      = isActive ? s.activeColor : s.inactiveColor;
+      el.style.opacity    = isActive ? 1 : Math.max(0.2, 1 - dist * 0.28);
+      el.style.fontWeight = isActive ? "600" : "400";
+    });
+  }
+
+  function updateLyricLine(progressSec) {
+    if (!lyrics.synced || !lyrics.lines.length) return;
+    let newIdx = -1;
+    for (let i = lyrics.lines.length - 1; i >= 0; i--) { if (progressSec >= lyrics.lines[i].time) { newIdx = i; break; } }
+    if (newIdx !== currentLyricIndex) { currentLyricIndex = newIdx; renderLyrics(); }
+  }
+
+  function updateProgress(pms, dms) {
+    if (!dms) return;
+    progFill.style.width = Math.min(100, (pms / dms) * 100) + "%";
+  }
+
+  function tick() {
+    if (isPlaying && lastPollTime) updateLyricLine((progressMs + Date.now() - lastPollTime) / 1000);
+    requestAnimationFrame(tick);
+  }
+
+  function showCard() { card.style.display = ""; requestAnimationFrame(() => card.classList.remove("hidden")); }
+  function hideCard() { card.classList.add("hidden"); }
+  function sleep(ms)  { return new Promise(r => setTimeout(r, ms)); }
+
+  async function init() {
+    await fetchSettings();
+    await fetchNowPlaying();
+    setInterval(fetchNowPlaying, 2000);
+    setInterval(fetchSettings, 10000);
+    requestAnimationFrame(tick);
+  }
+  init();
+</script>
+</body>
+</html>
