@@ -42,7 +42,7 @@ Double-click `NowPlaying.exe`.
 
 1. In OBS, add a **Browser Source**
 2. Set the URL to: `https://musicplayer.test:8888/overlay`
-3. Set width/height to match your canvas (e.g. 1920×1080)
+3. Set width/height to fit your layout (e.g. 500×150 for horizontal, 200×400 for vertical)
 4. Check **Shutdown source when not visible**
 
 ### 5. Customize
@@ -87,7 +87,7 @@ NowPlaying.exe
     └── /lyrics      → fetches synced lyrics from lrclib.net
 ```
 
-Credentials are saved to `credentials.json` next to the exe. Never shared.
+Credentials and settings are saved to `%APPDATA%\NowPlaying` on your machine. Never shared.
 
 ---
 
