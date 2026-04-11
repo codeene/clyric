@@ -16,9 +16,14 @@ const REDIRECT_URI = `https://${DOMAIN}:${PORT}/callback`;
 const SCOPES       = 'user-read-currently-playing user-read-playback-state';
 
 // When bundled with pkg, __dirname is read-only (inside the snapshot).
-// Writable files (certs, credentials, settings) go next to the exe instead.
+// Writable files go in %APPDATA%\NowPlaying so they don't clutter the exe folder.
 const isPkg    = typeof process.pkg !== 'undefined';
-const DATA_DIR = isPkg ? path.dirname(process.execPath) : __dirname;
+const DATA_DIR = isPkg
+  ? path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), 'NowPlaying')
+  : __dirname;
+
+// Ensure the data directory exists
+fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const SETTINGS_FILE    = path.join(DATA_DIR, 'settings.json');
 const CREDENTIALS_FILE = path.join(DATA_DIR, 'credentials.json');

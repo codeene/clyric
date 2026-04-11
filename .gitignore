@@ -12,6 +12,7 @@ settings.json
 
 # Build output
 dist/
+icon.ico
 
 # Claude Code internals
 .claude/

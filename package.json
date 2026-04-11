@@ -6,7 +6,7 @@
   "bin": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "pkg . --targets node18-win-x64 --output dist/NowPlaying.exe"
+    "build": "powershell -ExecutionPolicy Bypass -File generate-icon.ps1 && pkg . --targets node18-win-x64 --output dist/NowPlaying.exe --icon icon.ico"
   },
   "pkg": {
     "assets": [
