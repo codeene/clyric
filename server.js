@@ -4,6 +4,7 @@
 
 const express      = require('express');
 const https        = require('https');
+const http         = require('http');
 const fs           = require('fs');
 const path         = require('path');
 const forge        = require('node-forge');
@@ -11,6 +12,7 @@ const { execSync } = require('child_process');
 const os           = require('os');
 
 const PORT         = 8888;
+const OBS_PORT     = 8889;
 const DOMAIN       = 'musicplayer.test';
 const REDIRECT_URI = `https://${DOMAIN}:${PORT}/callback`;
 const SCOPES       = 'user-read-currently-playing user-read-playback-state';
@@ -284,13 +286,78 @@ app.get('/callback', async (req, res) => {
       };
       saveToken(tokenData);
       console.log('\n✅ Authenticated! Token ready.');
-      res.send(`
-        <html><body style="background:#0a0a0f;color:#f0ece4;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px;">
-          <h1 style="color:#1db954;">✅ Connected to Spotify!</h1>
-          <p>Your overlay is ready.</p>
-          <p><a href="https://${DOMAIN}:${PORT}/config" style="color:#1db954;">Open Config →</a></p>
-        </body></html>
-      `);
+      res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Now Playing — Connected!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#0c0c10;color:#f0eef8;font-family:'Inter',-apple-system,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;-webkit-font-smoothing:antialiased}
+.card{width:100%;max-width:480px;background:#131318;border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:40px}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
+.logo-icon{width:36px;height:36px;background:#1db954;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 20px rgba(29,185,84,0.4)}
+.logo-text{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.logo-sub{font-size:12px;color:rgba(255,255,255,0.4);margin-top:1px}
+.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(29,185,84,0.12);border:1px solid rgba(29,185,84,0.3);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;color:#1db954;margin-bottom:20px}
+h1{font-size:22px;font-weight:700;letter-spacing:-0.4px;margin-bottom:8px}
+.subtitle{font-size:14px;color:rgba(255,255,255,0.5);line-height:1.6;margin-bottom:28px}
+.obs-box{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;margin-bottom:28px}
+.obs-box h3{font-size:13px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px}
+.url-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.url-chip{flex:1;background:#0c0c10;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:13px;color:#1db954;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.copy-btn{padding:9px 14px;background:rgba(29,185,84,0.15);border:1px solid rgba(29,185,84,0.3);border-radius:8px;color:#1db954;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;white-space:nowrap;transition:background 0.15s}
+.copy-btn:hover{background:rgba(29,185,84,0.25)}
+.steps{display:flex;flex-direction:column;gap:9px}
+.step{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:rgba(255,255,255,0.65);line-height:1.5}
+.step-num{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.btn{width:100%;padding:14px;background:#1db954;border:none;border-radius:10px;color:#000;font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:background 0.15s,transform 0.1s;letter-spacing:-0.1px}
+.btn:hover{background:#1ed760}.btn:active{transform:scale(0.98)}
+.btn-ghost{width:100%;padding:14px;background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:rgba(255,255,255,0.6);font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:border-color 0.15s,color 0.15s;margin-top:10px;text-decoration:none;display:block;text-align:center}
+.btn-ghost:hover{border-color:rgba(255,255,255,0.25);color:#fff}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">♫</div>
+    <div><div class="logo-text">Now Playing</div><div class="logo-sub">OBS Spotify Overlay</div></div>
+  </div>
+
+  <div class="badge">✅ Connected to Spotify</div>
+  <h1>Last step — add to OBS</h1>
+  <p class="subtitle">Copy the URL below and add it as a Browser Source in OBS. Make sure Now Playing is running whenever you stream.</p>
+
+  <div class="obs-box">
+    <h3>OBS Browser Source URL</h3>
+    <div class="url-row">
+      <div class="url-chip" id="obs-url">http://localhost:${OBS_PORT}/overlay</div>
+      <button class="copy-btn" onclick="copyUrl()">Copy</button>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><span>In OBS, click <strong style="color:#fff">+</strong> under Sources and choose <strong style="color:#fff">Browser</strong>.</span></div>
+      <div class="step"><div class="step-num">2</div><span>Paste the URL above. Set width/height to fit your layout (e.g. 500×150).</span></div>
+      <div class="step"><div class="step-num">3</div><span>Check <strong style="color:#fff">Shutdown source when not visible</strong>, then click OK.</span></div>
+    </div>
+  </div>
+
+  <a href="https://${DOMAIN}:${PORT}/config" class="btn">Open Config to customise →</a>
+  <span style="display:block;text-align:center;font-size:12px;color:rgba(255,255,255,0.3);margin-top:14px">Now Playing is running in your system tray</span>
+</div>
+<script>
+function copyUrl(){
+  navigator.clipboard.writeText(document.getElementById('obs-url').textContent).then(()=>{
+    const b=document.querySelector('.copy-btn');
+    b.textContent='Copied!';
+    setTimeout(()=>b.textContent='Copy',2000);
+  });
+}
+</script>
+</body>
+</html>`);
     } else {
       res.send('Error getting token: ' + JSON.stringify(data));
     }
@@ -499,27 +566,33 @@ firstRunSetup().then(() => {
     key:  fs.readFileSync(KEY_FILE),
     cert: fs.readFileSync(CERT_FILE),
   };
-  const server = https.createServer(sslOptions, app);
 
-  server.listen(PORT, () => {
-    console.log(`\n🎵 Spotify Overlay — https://${DOMAIN}:${PORT}`);
-    console.log(`   Setup  : https://${DOMAIN}:${PORT}/setup`);
-    console.log(`   Overlay: https://${DOMAIN}:${PORT}/overlay  ← OBS browser source`);
-    console.log(`   Config : https://${DOMAIN}:${PORT}/config\n`);
+  // HTTPS server — Spotify auth, setup, config
+  const httpsServer = https.createServer(sslOptions, app);
+  // HTTP server — OBS browser source (CEF doesn't trust local certs)
+  const httpServer  = http.createServer(app);
 
-    startTray();
-    hideConsole();
+  httpsServer.listen(PORT, () => {
+    httpServer.listen(OBS_PORT, () => {
+      console.log(`\n🎵 Spotify Overlay`);
+      console.log(`   Setup  : https://${DOMAIN}:${PORT}/setup`);
+      console.log(`   Config : https://${DOMAIN}:${PORT}/config`);
+      console.log(`   OBS URL: http://localhost:${OBS_PORT}/overlay  ← use this in OBS\n`);
 
-    const startUrl = (CLIENT_ID && CLIENT_SECRET)
-      ? `https://${DOMAIN}:${PORT}/login`
-      : `https://${DOMAIN}:${PORT}/setup`;
-    try {
-      const open   = require('open');
-      const opener = open.default || open;
-      opener(startUrl);
-    } catch {
-      console.log(`   Open ${startUrl} in your browser.\n`);
-    }
+      startTray();
+      hideConsole();
+
+      const startUrl = (CLIENT_ID && CLIENT_SECRET)
+        ? `https://${DOMAIN}:${PORT}/login`
+        : `https://${DOMAIN}:${PORT}/setup`;
+      try {
+        const open   = require('open');
+        const opener = open.default || open;
+        opener(startUrl);
+      } catch {
+        console.log(`   Open ${startUrl} in your browser.\n`);
+      }
+    });
   });
 }).catch(err => {
   console.error('Startup failed:', err);

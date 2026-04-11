@@ -23,20 +23,20 @@ body {
 
 .card {
   width: 100%;
-  max-width: 460px;
+  max-width: 480px;
   background: #131318;
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 20px;
   padding: 40px;
 }
 
+/* ── Logo ── */
 .logo {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
-
 .logo-icon {
   width: 36px; height: 36px;
   background: #1db954;
@@ -45,9 +45,35 @@ body {
   font-size: 18px;
   box-shadow: 0 0 20px rgba(29,185,84,0.4);
 }
-
 .logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
 .logo-sub  { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+
+/* ── Progress bar ── */
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 32px;
+}
+.progress-step {
+  height: 3px;
+  flex: 1;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.08);
+  transition: background 0.4s;
+}
+.progress-step.active  { background: #1db954; }
+.progress-step.done    { background: rgba(29,185,84,0.4); }
+.progress-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  white-space: nowrap;
+  margin-left: 4px;
+}
+
+/* ── Steps ── */
+.step { display: none; }
+.step.active { display: block; }
 
 h1 {
   font-size: 22px;
@@ -55,51 +81,62 @@ h1 {
   letter-spacing: -0.4px;
   margin-bottom: 8px;
 }
-
 .subtitle {
   font-size: 14px;
   color: rgba(255,255,255,0.5);
-  margin-bottom: 32px;
-  line-height: 1.5;
+  line-height: 1.6;
+  margin-bottom: 28px;
 }
 
-.steps {
+/* ── Instruction list ── */
+.instructions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 32px;
-  padding: 16px;
+  gap: 12px;
+  margin-bottom: 28px;
+  padding: 18px;
   background: rgba(255,255,255,0.03);
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.06);
 }
-
-.step {
+.inst {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   font-size: 13px;
-  color: rgba(255,255,255,0.65);
-  line-height: 1.5;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.55;
 }
-
-.step-num {
-  width: 20px; height: 20px;
+.inst-num {
+  width: 22px; height: 22px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.5);
+  background: rgba(29,185,84,0.15);
+  color: #1db954;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   margin-top: 1px;
 }
+.inst a { color: #1db954; text-decoration: none; }
+.inst a:hover { text-decoration: underline; }
+.inst strong { color: #fff; }
 
-.step a { color: #1db954; text-decoration: none; }
-.step a:hover { text-decoration: underline; }
+/* ── Code chip ── */
+.chip {
+  display: inline-block;
+  background: rgba(29,185,84,0.1);
+  border: 1px solid rgba(29,185,84,0.25);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #1db954;
+  word-break: break-all;
+}
 
+/* ── Fields ── */
 .field { margin-bottom: 16px; }
-
 .field label {
   display: block;
   font-size: 12px;
@@ -109,7 +146,6 @@ h1 {
   letter-spacing: 0.06em;
   margin-bottom: 8px;
 }
-
 .field input {
   width: 100%;
   background: #0c0c10;
@@ -124,13 +160,9 @@ h1 {
 }
 .field input:focus { border-color: #1db954; }
 .field input::placeholder { color: rgba(255,255,255,0.2); }
+.field-hint { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 6px; }
 
-.field-hint {
-  font-size: 11px;
-  color: rgba(255,255,255,0.3);
-  margin-top: 6px;
-}
-
+/* ── Buttons ── */
 .btn {
   width: 100%;
   padding: 14px;
@@ -142,7 +174,6 @@ h1 {
   font-weight: 700;
   font-family: 'Inter', sans-serif;
   cursor: pointer;
-  margin-top: 8px;
   transition: background 0.15s, transform 0.1s;
   letter-spacing: -0.1px;
 }
@@ -150,6 +181,46 @@ h1 {
 .btn:active { transform: scale(0.98); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.btn-ghost {
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  margin-top: 10px;
+}
+.btn-ghost:hover { border-color: rgba(255,255,255,0.25); color: #fff; }
+
+/* ── Welcome feature list ── */
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+}
+.feature-icon {
+  width: 32px; height: 32px;
+  background: rgba(29,185,84,0.1);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* ── Error ── */
 .error {
   background: rgba(255,80,80,0.1);
   border: 1px solid rgba(255,80,80,0.25);
@@ -160,22 +231,12 @@ h1 {
   margin-top: 12px;
   display: none;
 }
-
-.redirect-note {
-  margin-top: 24px;
-  padding: 12px 14px;
-  background: rgba(29,185,84,0.08);
-  border: 1px solid rgba(29,185,84,0.2);
-  border-radius: 10px;
-  font-size: 12px;
-  color: rgba(255,255,255,0.6);
-  line-height: 1.5;
-}
-.redirect-note strong { color: #1db954; font-weight: 600; }
 </style>
 </head>
 <body>
 <div class="card">
+
+  <!-- Logo -->
   <div class="logo">
     <div class="logo-icon">♫</div>
     <div>
@@ -184,45 +245,112 @@ h1 {
     </div>
   </div>
 
-  <h1>Connect to Spotify</h1>
-  <p class="subtitle">You'll need a free Spotify Developer app to get your API credentials. Takes about 2 minutes.</p>
-
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <span>Go to <a href="https://developer.spotify.com/dashboard" target="_blank">developer.spotify.com/dashboard</a> and create a new app.</span>
-    </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <span>In the app settings, add <strong>https://musicplayer.test:8888/callback</strong> as a Redirect URI and save.</span>
-    </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <span>Copy your <strong>Client ID</strong> and <strong>Client Secret</strong> from the app dashboard.</span>
-    </div>
+  <!-- Progress -->
+  <div class="progress">
+    <div class="progress-step" id="p1"></div>
+    <div class="progress-step" id="p2"></div>
+    <div class="progress-step" id="p3"></div>
+    <span class="progress-label" id="progress-label">Step 1 of 3</span>
   </div>
 
-  <form id="setup-form">
-    <div class="field">
-      <label>Client ID</label>
-      <input type="text" id="client-id" placeholder="e.g. f22c5dd25ff14c8aae59ab31bfe07cdb" autocomplete="off" spellcheck="false">
-    </div>
-    <div class="field">
-      <label>Client Secret</label>
-      <input type="password" id="client-secret" placeholder="Your client secret" autocomplete="off">
-      <div class="field-hint">Stored locally on your machine. Never shared.</div>
-    </div>
-    <button type="submit" class="btn" id="submit-btn">Save &amp; Connect to Spotify →</button>
-    <div class="error" id="error-msg"></div>
-  </form>
+  <!-- ── Step 1: Welcome ── -->
+  <div class="step active" id="step-1">
+    <h1>Welcome to Now Playing</h1>
+    <p class="subtitle">A real-time Spotify overlay for OBS — shows your current track, album art, and synced lyrics live on stream.</p>
 
-  <div class="redirect-note">
-    <strong>Redirect URI to add in Spotify:</strong><br>
-    https://musicplayer.test:8888/callback
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🎵</div>
+        <span>Track info — album art, title, artist</span>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎤</div>
+        <span>Synced lyrics — karaoke-style, real-time</span>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎨</div>
+        <span>Fully customizable — fonts, colors, layout</span>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⚙️</div>
+        <span>Live config — tweak without restarting</span>
+      </div>
+    </div>
+
+    <p class="subtitle">Setup takes about 2 minutes. You'll need a free Spotify Developer account.</p>
+    <button class="btn" onclick="goTo(2)">Get Started →</button>
   </div>
+
+  <!-- ── Step 2: Create Spotify App ── -->
+  <div class="step" id="step-2">
+    <h1>Create a Spotify App</h1>
+    <p class="subtitle">Now Playing needs a Spotify Developer app to read your currently playing track. It's free and takes 2 minutes.</p>
+
+    <div class="instructions">
+      <div class="inst">
+        <div class="inst-num">1</div>
+        <span>Go to <a href="https://developer.spotify.com/dashboard" target="_blank">developer.spotify.com/dashboard</a> and click <strong>Create app</strong>.</span>
+      </div>
+      <div class="inst">
+        <div class="inst-num">2</div>
+        <span>Give it any name and description. Under <strong>APIs used</strong>, check <strong>Web API</strong>.</span>
+      </div>
+      <div class="inst">
+        <div class="inst-num">3</div>
+        <span>In <strong>Redirect URIs</strong>, paste exactly:<br><br>
+          <span class="chip">https://musicplayer.test:8888/callback</span>
+        </span>
+      </div>
+      <div class="inst">
+        <div class="inst-num">4</div>
+        <span>Click <strong>Add</strong> then scroll down and hit <strong>Save</strong>.</span>
+      </div>
+    </div>
+
+    <button class="btn" onclick="goTo(3)">I've done this →</button>
+    <button class="btn-ghost" onclick="goTo(1)">← Back</button>
+  </div>
+
+  <!-- ── Step 3: Enter Credentials ── -->
+  <div class="step" id="step-3">
+    <h1>Enter your credentials</h1>
+    <p class="subtitle">From your Spotify app dashboard, copy your <strong style="color:#fff">Client ID</strong> and <strong style="color:#fff">Client Secret</strong>.</p>
+
+    <form id="setup-form">
+      <div class="field">
+        <label>Client ID</label>
+        <input type="text" id="client-id" placeholder="32-character hex string" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label>Client Secret</label>
+        <input type="password" id="client-secret" placeholder="Your client secret" autocomplete="off">
+        <div class="field-hint">Stored locally on your machine. Never shared.</div>
+      </div>
+      <button type="submit" class="btn" id="submit-btn">Connect to Spotify →</button>
+      <div class="error" id="error-msg"></div>
+    </form>
+    <button class="btn-ghost" onclick="goTo(2)">← Back</button>
+  </div>
+
 </div>
 
 <script>
+function goTo(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+
+  const labels = ['', 'Step 1 of 3', 'Step 2 of 3', 'Step 3 of 3'];
+  document.getElementById('progress-label').textContent = labels[n];
+
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('p' + i);
+    el.className = 'progress-step' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+}
+
+// Init progress
+goTo(1);
+
 document.getElementById("setup-form").addEventListener("submit", async e => {
   e.preventDefault();
   const id     = document.getElementById("client-id").value.trim();
@@ -263,7 +391,7 @@ document.getElementById("setup-form").addEventListener("submit", async e => {
     err.textContent = "Error: " + ex.message;
     err.style.display = "block";
     btn.disabled = false;
-    btn.textContent = "Save & Connect to Spotify →";
+    btn.textContent = "Connect to Spotify →";
   }
 });
 </script>
