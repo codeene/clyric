@@ -27,6 +27,7 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const SETTINGS_FILE    = path.join(DATA_DIR, 'settings.json');
 const CREDENTIALS_FILE = path.join(DATA_DIR, 'credentials.json');
+const TOKEN_FILE       = path.join(DATA_DIR, 'token.json');
 const CA_FILE          = path.join(DATA_DIR, 'ca.crt');
 const CERT_FILE        = path.join(DATA_DIR, 'cert.pem');
 const KEY_FILE         = path.join(DATA_DIR, 'key.pem');
@@ -153,7 +154,21 @@ async function firstRunSetup() {
 const app = express();
 app.use(express.json());
 
-let tokenData    = null;
+function loadToken() {
+  try {
+    if (fs.existsSync(TOKEN_FILE))
+      return JSON.parse(fs.readFileSync(TOKEN_FILE, 'utf8'));
+  } catch {}
+  return null;
+}
+
+function saveToken(data) {
+  try {
+    fs.writeFileSync(TOKEN_FILE, JSON.stringify(data, null, 2));
+  } catch {}
+}
+
+let tokenData = loadToken();
 const lyricsCache = new Map();
 
 function corsHeaders(res) {
@@ -203,6 +218,7 @@ async function ensureFreshToken() {
         tokenData.access_token = data.access_token;
         tokenData.expires_at   = Date.now() + data.expires_in * 1000;
         if (data.refresh_token) tokenData.refresh_token = data.refresh_token;
+        saveToken(tokenData);
         console.log('🔄 Token refreshed.');
       }
     } catch (err) {
@@ -266,6 +282,7 @@ app.get('/callback', async (req, res) => {
         refresh_token: data.refresh_token,
         expires_at:    Date.now() + data.expires_in * 1000,
       };
+      saveToken(tokenData);
       console.log('\n✅ Authenticated! Token ready.');
       res.send(`
         <html><body style="background:#0a0a0f;color:#f0ece4;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px;">

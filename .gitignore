@@ -9,6 +9,7 @@ ca.crt
 # User data
 credentials.json
 settings.json
+token.json
 
 # Build output
 dist/
