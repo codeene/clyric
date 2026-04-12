@@ -190,6 +190,8 @@
     document.documentElement.style.setProperty("--font", f.family);
   }
 
+  const overlayProfile = Math.min(3, Math.max(1, parseInt(window.location.pathname.split('/').pop()) || 1));
+
   // ── State ──────────────────────────────────────────────────────
   let settings = {};
   let currentTrackId = null;
@@ -248,7 +250,7 @@
   }
 
   async function fetchSettings() {
-    try { const r = await fetch("/settings"); applySettings(await r.json()); } catch {}
+    try { const r = await fetch('/settings?profile=' + overlayProfile); applySettings(await r.json()); } catch {}
   }
 
   async function fetchNowPlaying() {

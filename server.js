@@ -162,12 +162,20 @@ function corsHeaders(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 }
 
-function loadSettings() {
+function loadSettings(profile = 1) {
+  const file = path.join(DATA_DIR, `settings-${profile}.json`);
   try {
-    if (fs.existsSync(SETTINGS_FILE))
+    if (fs.existsSync(file))
+      return { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(file, 'utf8')) };
+    // Migrate legacy settings.json → settings-1.json on first upgrade
+    if (profile === 1 && fs.existsSync(SETTINGS_FILE))
       return { ...DEFAULT_SETTINGS, ...JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8')) };
   } catch {}
   return { ...DEFAULT_SETTINGS };
+}
+
+function saveSettings(profile, data) {
+  fs.writeFileSync(path.join(DATA_DIR, `settings-${profile}.json`), JSON.stringify(data, null, 2));
 }
 
 function parseLRC(lrc) {
@@ -314,18 +322,26 @@ h1{font-size:22px;font-weight:700;letter-spacing:-0.4px;margin-bottom:8px}
 
   <div class="badge">✅ Connected to Spotify</div>
   <h1>Last step — add to OBS</h1>
-  <p class="subtitle">Copy the URL below and add it as a Browser Source in OBS. Make sure Now Playing is running whenever you stream.</p>
+  <p class="subtitle">You have <strong style="color:#fff">3 independent profiles</strong> — each gets its own Browser Source URL. Add as many as you need and configure each one separately from the Config page.</p>
 
   <div class="obs-box">
-    <h3>OBS Browser Source URL</h3>
+    <h3>OBS Browser Source URLs</h3>
     <div class="url-row">
-      <div class="url-chip" id="obs-url">http://127.0.0.1:${OBS_PORT}/overlay</div>
-      <button class="copy-btn" onclick="copyUrl()">Copy</button>
+      <div class="url-chip">http://127.0.0.1:${OBS_PORT}/overlay/1</div>
+      <button class="copy-btn" onclick="copyUrl(this,'http://127.0.0.1:${OBS_PORT}/overlay/1')">Copy</button>
     </div>
-    <div class="steps">
+    <div class="url-row" style="margin-top:6px">
+      <div class="url-chip">http://127.0.0.1:${OBS_PORT}/overlay/2</div>
+      <button class="copy-btn" onclick="copyUrl(this,'http://127.0.0.1:${OBS_PORT}/overlay/2')">Copy</button>
+    </div>
+    <div class="url-row" style="margin-top:6px">
+      <div class="url-chip">http://127.0.0.1:${OBS_PORT}/overlay/3</div>
+      <button class="copy-btn" onclick="copyUrl(this,'http://127.0.0.1:${OBS_PORT}/overlay/3')">Copy</button>
+    </div>
+    <div class="steps" style="margin-top:14px">
       <div class="step"><div class="step-num">1</div><span>In OBS, click <strong style="color:#fff">+</strong> under Sources and choose <strong style="color:#fff">Browser</strong>.</span></div>
-      <div class="step"><div class="step-num">2</div><span>Paste the URL above. Set width/height to fit your layout (e.g. 500×150).</span></div>
-      <div class="step"><div class="step-num">3</div><span>Check <strong style="color:#fff">Shutdown source when not visible</strong>, then click OK.</span></div>
+      <div class="step"><div class="step-num">2</div><span>Paste one of the URLs above. Set width/height to fit your layout (e.g. 500×150).</span></div>
+      <div class="step"><div class="step-num">3</div><span>Use <strong style="color:#fff">Config</strong> to customise each profile independently — switch profiles with the selector at the top of the panel.</span></div>
     </div>
   </div>
 
@@ -333,11 +349,10 @@ h1{font-size:22px;font-weight:700;letter-spacing:-0.4px;margin-bottom:8px}
   <span style="display:block;text-align:center;font-size:12px;color:rgba(255,255,255,0.3);margin-top:14px">Now Playing is running in your system tray</span>
 </div>
 <script>
-function copyUrl(){
-  navigator.clipboard.writeText(document.getElementById('obs-url').textContent).then(()=>{
-    const b=document.querySelector('.copy-btn');
-    b.textContent='Copied!';
-    setTimeout(()=>b.textContent='Copy',2000);
+function copyUrl(btn, url){
+  navigator.clipboard.writeText(url).then(()=>{
+    btn.textContent='Copied!';
+    setTimeout(()=>btn.textContent='Copy',2000);
   });
 }
 </script>
@@ -430,21 +445,23 @@ app.get('/lyrics', async (req, res) => {
 
 app.get('/settings', (req, res) => {
   corsHeaders(res);
-  res.json(loadSettings());
+  const profile = Math.min(3, Math.max(1, parseInt(req.query.profile) || 1));
+  res.json(loadSettings(profile));
 });
 
 app.post('/settings', (req, res) => {
   corsHeaders(res);
+  const profile = Math.min(3, Math.max(1, parseInt(req.query.profile) || 1));
   try {
-    const merged = { ...loadSettings(), ...req.body };
-    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(merged, null, 2));
+    const merged = { ...loadSettings(profile), ...req.body };
+    saveSettings(profile, merged);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
 });
 
-app.get('/overlay', (req, res) => res.sendFile(path.join(__dirname, 'overlay.html')));
+app.get(['/overlay', '/overlay/:profile'], (req, res) => res.sendFile(path.join(__dirname, 'overlay.html')));
 app.get('/config',  (req, res) => res.sendFile(path.join(__dirname, 'config.html')));
 
 // ── System tray (Windows) ─────────────────────────────────────────
@@ -562,7 +579,9 @@ firstRunSetup().then(() => {
       console.log(`\n🎵 Spotify Overlay`);
       console.log(`   Setup  : https://${DOMAIN}:${PORT}/setup`);
       console.log(`   Config : https://${DOMAIN}:${PORT}/config`);
-      console.log(`   OBS URL: http://127.0.0.1:${OBS_PORT}/overlay  ← use this in OBS\n`);
+      console.log(`   OBS URLs: http://127.0.0.1:${OBS_PORT}/overlay/1  (Profile 1)`);
+      console.log(`             http://127.0.0.1:${OBS_PORT}/overlay/2  (Profile 2)`);
+      console.log(`             http://127.0.0.1:${OBS_PORT}/overlay/3  (Profile 3)\n`);
 
       startTray();
       hideConsole();

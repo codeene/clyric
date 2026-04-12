@@ -124,6 +124,80 @@ header {
   overflow: hidden;
 }
 
+/* ── Profile Bar ─────────────────────────────────────────────── */
+.profile-bar {
+  display: flex;
+  padding: 10px 12px;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.profile-btn {
+  flex: 1;
+  text-align: center;
+  padding: 6px 4px;
+  border-radius: 7px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.profile-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+.profile-btn.active {
+  background: var(--accent-d);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── OBS URL Bar ─────────────────────────────────────────────── */
+.obs-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.obs-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.obs-chip {
+  flex: 1;
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--accent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.obs-copy {
+  padding: 3px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(29,185,84,0.3);
+  background: rgba(29,185,84,0.1);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.obs-copy:hover { background: rgba(29,185,84,0.2); }
+
 /* ── Tabs ────────────────────────────────────────────────────── */
 .tabs {
   display: flex;
@@ -366,16 +440,31 @@ input[type=range]::-webkit-slider-thumb {
     </div>
     <div class="header-sep"></div>
     <span id="save-indicator">Saved ✓</span>
-    <a href="/overlay" target="_blank" class="btn">Open Overlay ↗</a>
+    <a href="/overlay/1" id="open-overlay-btn" target="_blank" class="btn">Open Overlay ↗</a>
   </header>
 
   <!-- Preview -->
   <div class="preview-pane">
-    <iframe id="preview" src="/overlay" title="Overlay Preview"></iframe>
+    <iframe id="preview" src="/overlay/1" title="Overlay Preview"></iframe>
   </div>
 
   <!-- Settings Panel -->
   <div class="panel">
+
+    <!-- Profile selector -->
+    <div class="profile-bar">
+      <button class="profile-btn active" data-profile="1">Profile 1</button>
+      <button class="profile-btn" data-profile="2">Profile 2</button>
+      <button class="profile-btn" data-profile="3">Profile 3</button>
+    </div>
+
+    <!-- OBS URL for current profile -->
+    <div class="obs-bar">
+      <span class="obs-label">OBS URL</span>
+      <span class="obs-chip" id="obs-url-chip">http://127.0.0.1:8889/overlay/1</span>
+      <button class="obs-copy" id="obs-copy-btn" onclick="copyObsUrl()">Copy</button>
+    </div>
+
     <div class="tabs">
       <div class="tab active" data-tab="elements">Elements</div>
       <div class="tab" data-tab="lyrics">Lyrics</div>
@@ -628,8 +717,32 @@ let saveTimer = null;
 let currentFont = "Default";
 let layoutVal = "horizontal";
 let animVal   = "slide";
+let currentProfile = 1;
 
 const indicator = document.getElementById("save-indicator");
+
+// ── Profile switching ─────────────────────────────────────────
+document.querySelectorAll(".profile-btn").forEach(btn => {
+  btn.addEventListener("click", () => switchProfile(parseInt(btn.dataset.profile)));
+});
+
+async function switchProfile(p) {
+  currentProfile = p;
+  document.querySelectorAll(".profile-btn").forEach(b => b.classList.toggle("active", parseInt(b.dataset.profile) === p));
+  document.getElementById("obs-url-chip").textContent = `http://127.0.0.1:8889/overlay/${p}`;
+  document.getElementById("open-overlay-btn").href = `/overlay/${p}`;
+  document.getElementById("preview").src = `/overlay/${p}`;
+  await loadProfileSettings();
+}
+
+function copyObsUrl() {
+  const url = document.getElementById("obs-url-chip").textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById("obs-copy-btn");
+    btn.textContent = "Copied!";
+    setTimeout(() => btn.textContent = "Copy", 2000);
+  });
+}
 
 // ── Tabs ──────────────────────────────────────────────────────
 document.querySelectorAll(".tab").forEach(tab => {
@@ -644,7 +757,6 @@ document.querySelectorAll(".tab").forEach(tab => {
 // ── Font grid ─────────────────────────────────────────────────
 function buildFontGrid() {
   const grid = document.getElementById("font-grid");
-  // Preload all google fonts for preview
   const allUrls = Object.values(FONTS).map(f => f.url).filter(Boolean);
   allUrls.forEach(url => {
     const link = document.createElement("link");
@@ -778,14 +890,12 @@ function populateUI(s) {
   document.getElementById("lyrics-activeColor-btn").style.background   = s.lyrics.activeColor;
   document.getElementById("lyrics-inactiveColor-btn").style.background = s.lyrics.inactiveColor;
 
-  // Layout chips
   layoutVal = s.layout || "horizontal";
   document.querySelectorAll("#layout-chips .chip").forEach(c => c.classList.toggle("active", c.dataset.val === layoutVal));
 
   animVal = s.animation || "slide";
   document.querySelectorAll("#animation-chips .chip").forEach(c => c.classList.toggle("active", c.dataset.val === animVal));
 
-  // Background
   const bg = parseRgba(s.background.color);
   set("bg-color-picker", bg.hex);
   set("bg-opacity",       bg.opacity);
@@ -794,7 +904,6 @@ function populateUI(s) {
   syncSliderVal("bg-blur");
   syncBgSwatch();
 
-  // Font
   currentFont = s.font || "Default";
   document.querySelectorAll(".font-card").forEach(c => c.classList.toggle("active", c.dataset.font === currentFont));
 }
@@ -830,7 +939,7 @@ function scheduleSave() {
   saveTimer = setTimeout(async () => {
     const s = collectSettings();
     try {
-      await fetch("/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) });
+      await fetch(`/settings?profile=${currentProfile}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) });
       document.getElementById("preview").contentWindow.location.reload();
       indicator.classList.add("show");
       setTimeout(() => indicator.classList.remove("show"), 1800);
@@ -854,12 +963,16 @@ function buildRgba(hex, opacity) {
 }
 
 // ── Init ──────────────────────────────────────────────────────
-async function init() {
-  buildFontGrid();
+async function loadProfileSettings() {
   try {
-    const res = await fetch("/settings");
+    const res = await fetch(`/settings?profile=${currentProfile}`);
     populateUI(await res.json());
   } catch {}
+}
+
+async function init() {
+  buildFontGrid();
+  await loadProfileSettings();
 }
 init();
 </script>
