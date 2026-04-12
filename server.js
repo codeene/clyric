@@ -319,7 +319,7 @@ h1{font-size:22px;font-weight:700;letter-spacing:-0.4px;margin-bottom:8px}
   <div class="obs-box">
     <h3>OBS Browser Source URL</h3>
     <div class="url-row">
-      <div class="url-chip" id="obs-url">http://localhost:${OBS_PORT}/overlay</div>
+      <div class="url-chip" id="obs-url">http://127.0.0.1:${OBS_PORT}/overlay</div>
       <button class="copy-btn" onclick="copyUrl()">Copy</button>
     </div>
     <div class="steps">
@@ -562,7 +562,7 @@ firstRunSetup().then(() => {
       console.log(`\n🎵 Spotify Overlay`);
       console.log(`   Setup  : https://${DOMAIN}:${PORT}/setup`);
       console.log(`   Config : https://${DOMAIN}:${PORT}/config`);
-      console.log(`   OBS URL: http://localhost:${OBS_PORT}/overlay  ← use this in OBS\n`);
+      console.log(`   OBS URL: http://127.0.0.1:${OBS_PORT}/overlay  ← use this in OBS\n`);
 
       startTray();
       hideConsole();
