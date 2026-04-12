@@ -26,7 +26,7 @@ Grab `NowPlaying.exe` from the [Releases](../../releases) page.
 1. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
 2. Click **Create app**
 3. Fill in any name and description
-4. Under **Redirect URIs**, add: `https://musicplayer.test:8888/callback`
+4. Under **Redirect URIs**, add: `https://localhost:8888/callback`
 5. Check **Web API** and click **Save**
 6. Copy your **Client ID** and **Client Secret**
 
@@ -34,20 +34,22 @@ Grab `NowPlaying.exe` from the [Releases](../../releases) page.
 
 Double-click `NowPlaying.exe`.
 
-- **First launch only:** a UAC prompt will appear to install a local HTTPS certificate and add a hosts entry — this is a one-time setup, it never happens again.
+- **First launch only:** a standard Windows dialog will appear asking you to confirm installing a local HTTPS certificate — this is a one-time setup, it never happens again. No admin rights required.
 - Your browser opens automatically to the setup page.
 - Enter your **Client ID** and **Client Secret**, then log in to Spotify.
 
 ### 4. Add to OBS
 
 1. In OBS, add a **Browser Source**
-2. Set the URL to: `https://musicplayer.test:8888/overlay`
+2. Set the URL to: `http://localhost:8889/overlay`
 3. Set width/height to fit your layout (e.g. 500×150 for horizontal, 200×400 for vertical)
 4. Check **Shutdown source when not visible**
 
 ### 5. Customize
 
-Right-click the tray icon → **Open Config**, or go to `https://musicplayer.test:8888/config`. Changes apply live.
+Right-click the tray icon → **Open Config**, or go to `https://localhost:8888/config`. Changes apply live.
+
+> The OBS browser source uses `http://localhost:8889/overlay` (plain HTTP) because OBS's built-in browser does not trust locally-generated HTTPS certificates.
 
 ---
 
@@ -76,15 +78,18 @@ npm run build
 ```
 NowPlaying.exe
     │
-    ├── First run: generates HTTPS cert, installs CA, adds hosts entry
+    ├── First run: generates HTTPS cert, installs CA to user cert store (no admin)
     │
-    ├── /setup       → enter Spotify credentials (first run only)
-    ├── /login       → Spotify OAuth redirect
-    ├── /callback    → receives auth code, stores token
-    ├── /overlay     → OBS browser source URL
-    ├── /config      → live customization UI
-    ├── /now-playing → polling endpoint
-    └── /lyrics      → fetches synced lyrics from lrclib.net
+    ├── https://localhost:8888  (Spotify auth + config)
+    │     ├── /setup       → enter Spotify credentials (first run only)
+    │     ├── /login       → Spotify OAuth redirect
+    │     ├── /callback    → receives auth code, stores token
+    │     └── /config      → live customization UI
+    │
+    └── http://localhost:8889  (OBS browser source)
+          ├── /overlay     → OBS browser source URL
+          ├── /now-playing → polling endpoint
+          └── /lyrics      → fetches synced lyrics from lrclib.net
 ```
 
 Credentials and settings are saved to `%APPDATA%\NowPlaying` on your machine. Never shared.

@@ -1,5 +1,5 @@
 // ── Spotify Now Playing Overlay Server ───────────────────────────
-// First run: auto-generates HTTPS certs + hosts entry (one UAC prompt).
+// First run: auto-generates HTTPS certs + installs CA to user cert store (no admin required).
 // Subsequent runs: just start and go.
 
 const express      = require('express');
@@ -13,7 +13,7 @@ const os           = require('os');
 
 const PORT         = 8888;
 const OBS_PORT     = 8889;
-const DOMAIN       = 'musicplayer.test';
+const DOMAIN       = 'localhost';
 const REDIRECT_URI = `https://${DOMAIN}:${PORT}/callback`;
 const SCOPES       = 'user-read-currently-playing user-read-playback-state';
 
@@ -33,7 +33,6 @@ const TOKEN_FILE       = path.join(DATA_DIR, 'token.json');
 const CA_FILE          = path.join(DATA_DIR, 'ca.crt');
 const CERT_FILE        = path.join(DATA_DIR, 'cert.pem');
 const KEY_FILE         = path.join(DATA_DIR, 'key.pem');
-const HOSTS_FILE       = 'C:\\Windows\\System32\\drivers\\etc\\hosts';
 
 // ── Load credentials ──────────────────────────────────────────────
 function loadCredentials() {
@@ -104,7 +103,6 @@ function generateCerts() {
     {
       name: 'subjectAltName',
       altNames: [
-        { type: 2, value: DOMAIN      },
         { type: 2, value: 'localhost' },
         { type: 7, ip: '127.0.0.1'   },
       ],
@@ -118,37 +116,24 @@ function generateCerts() {
   console.log('Certificates generated ✓');
 }
 
-// ── First-run setup (elevation only if hosts/CA not yet configured) ─
+// ── First-run setup (no admin required) ──────────────────────────
 async function firstRunSetup() {
   const certsReady = fs.existsSync(CERT_FILE) && fs.existsSync(KEY_FILE) && fs.existsSync(CA_FILE);
-  const hostsOk    = fs.existsSync(HOSTS_FILE) &&
-                     fs.readFileSync(HOSTS_FILE, 'utf8').includes(DOMAIN);
+  if (certsReady) return;
 
-  if (certsReady && hostsOk) return;
+  generateCerts();
 
-  // Generate certs first (no elevation needed)
-  if (!certsReady) generateCerts();
-
-  if (!hostsOk) {
-    // One UAC prompt to install CA + add hosts entry
-    const psLines = [
-      `certutil -addstore -f Root "${CA_FILE.replace(/\//g, '\\')}"`,
-      `$h = 'C:\\Windows\\System32\\drivers\\etc\\hosts'`,
-      `$e = '127.0.0.1 ${DOMAIN}'`,
-      'if (-not (Select-String -Path $h -Pattern ([regex]::Escape($e)) -Quiet)) { Add-Content $h ("`n" + $e) }',
-    ].join('; ');
-
-    const tmpScript = path.join(os.tmpdir(), 'nowplaying-setup.ps1');
-    fs.writeFileSync(tmpScript, psLines, 'utf8');
-
-    console.log('\nRequesting administrator access to install certificate and update hosts file…');
+  // Install CA to the current user's cert store — no admin/UAC needed.
+  // Windows will show a standard "Do you want to install this certificate?" dialog.
+  console.log('\nInstalling certificate to user store (a Windows confirmation dialog will appear)…');
+  try {
     execSync(
-      `powershell -Command "Start-Process powershell -ArgumentList '-ExecutionPolicy Bypass -File \\"${tmpScript}\\"' -Verb RunAs -Wait"`,
+      `certutil -addstore -user Root "${CA_FILE.replace(/\//g, '\\')}"`,
       { stdio: 'inherit' }
     );
-
-    try { fs.unlinkSync(tmpScript); } catch {}
-    console.log('System setup complete ✓\n');
+    console.log('Certificate installed ✓\n');
+  } catch (err) {
+    console.error('Certificate install failed:', err.message);
   }
 }
 
