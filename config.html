@@ -581,6 +581,35 @@ input[type=range]::-webkit-slider-thumb {
         </div>
       </div>
 
+      <!-- Media Controls -->
+      <div>
+        <div class="section-label">Media Controls</div>
+        <div class="card">
+          <div class="row">
+            <div class="row-label">Show Controls
+              <div class="row-sub">Visual only — prev, play/pause, next</div>
+            </div>
+            <div class="row-right">
+              <div class="color-btn" id="controls-color-btn" title="Color">
+                <input type="color" id="controls-color" value="#ffffff" style="opacity:0;width:100%;height:100%;cursor:pointer;border:none;">
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="controls-enabled">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="row-label">Size</div>
+            <div class="row-right slider-wrap">
+              <input type="range" id="controls-size" min="14" max="48" step="2">
+              <span class="slider-val" id="controls-size-val">22</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ── Lyrics Tab ── -->
@@ -689,6 +718,29 @@ input[type=range]::-webkit-slider-thumb {
             <div class="row-right slider-wrap">
               <input type="range" id="bg-blur" min="0" max="40" step="1">
               <span class="slider-val" id="bg-blur-val">12</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card -->
+      <div>
+        <div class="section-label">Card</div>
+        <div class="card">
+          <div class="row">
+            <div class="row-label">Corner Radius</div>
+            <div class="row-right slider-wrap">
+              <input type="range" id="card-borderRadius" min="0" max="40" step="2">
+              <span class="slider-val" id="card-borderRadius-val">16</span>
+            </div>
+          </div>
+          <div class="row">
+            <div class="row-label">Max Width
+              <div class="row-sub">Increase if lyrics get cut off</div>
+            </div>
+            <div class="row-right slider-wrap">
+              <input type="range" id="card-maxWidth" min="300" max="1400" step="20">
+              <span class="slider-val" id="card-maxWidth-val" style="width:36px">720</span>
             </div>
           </div>
         </div>
@@ -806,7 +858,7 @@ function syncSwatch(inputId, btnId) {
     scheduleSave();
   });
 }
-["title","artist","album","progressBar","lyrics-activeColor","lyrics-inactiveColor"].forEach(k => {
+["title","artist","album","progressBar","controls","lyrics-activeColor","lyrics-inactiveColor"].forEach(k => {
   const id = k.includes("-") ? k : k + "-color";
   const btn = k.includes("-") ? k + "-btn" : k + "-color-btn";
   syncSwatch(id, btn);
@@ -837,10 +889,10 @@ function syncSlider(id) {
   val.textContent = el.value;
   el.addEventListener("input", () => { val.textContent = el.value; scheduleSave(); });
 }
-["albumArt-size","albumArt-borderRadius","title-fontSize","artist-fontSize","album-fontSize","lyrics-fontSize","bg-opacity","bg-blur"].forEach(syncSlider);
+["albumArt-size","albumArt-borderRadius","title-fontSize","artist-fontSize","album-fontSize","lyrics-fontSize","bg-opacity","bg-blur","card-borderRadius","card-maxWidth","controls-size"].forEach(syncSlider);
 
 // ── Toggles ───────────────────────────────────────────────────
-["albumArt-enabled","title-enabled","artist-enabled","album-enabled","progressBar-enabled","lyrics-enabled"].forEach(id => {
+["albumArt-enabled","title-enabled","artist-enabled","album-enabled","progressBar-enabled","controls-enabled","lyrics-enabled"].forEach(id => {
   document.getElementById(id)?.addEventListener("change", scheduleSave);
 });
 document.querySelectorAll(".num-input").forEach(el => el.addEventListener("input", scheduleSave));
@@ -880,6 +932,13 @@ function populateUI(s) {
   set("progressBar-color",        s.progressBar.color);
   document.getElementById("progressBar-color-btn").style.background = s.progressBar.color;
 
+  const ctrl = s.controls || {};
+  setCheck("controls-enabled", ctrl.enabled ?? true);
+  set("controls-color",        ctrl.color   ?? "#ffffff");
+  set("controls-size",         ctrl.size    ?? 22);
+  syncSliderVal("controls-size");
+  document.getElementById("controls-color-btn").style.background = ctrl.color ?? "#ffffff";
+
   setCheck("lyrics-enabled",         s.lyrics.enabled);
   set("lyrics-fontSize",             s.lyrics.fontSize);
   set("lyrics-activeColor",          s.lyrics.activeColor);
@@ -904,6 +963,12 @@ function populateUI(s) {
   syncSliderVal("bg-blur");
   syncBgSwatch();
 
+  const card_ = s.card || {};
+  set("card-borderRadius", card_.borderRadius ?? 16);
+  set("card-maxWidth",     card_.maxWidth     ?? 720);
+  syncSliderVal("card-borderRadius");
+  syncSliderVal("card-maxWidth");
+
   currentFont = s.font || "Default";
   document.querySelectorAll(".font-card").forEach(c => c.classList.toggle("active", c.dataset.font === currentFont));
 }
@@ -925,10 +990,12 @@ function collectSettings() {
     artist:      { enabled: getBool("artist-enabled"),      fontSize: getNum("artist-fontSize"), color: get("artist-color") },
     album:       { enabled: getBool("album-enabled"),       fontSize: getNum("album-fontSize"),  color: get("album-color") },
     progressBar: { enabled: getBool("progressBar-enabled"), color: get("progressBar-color") },
+    controls:    { enabled: getBool("controls-enabled"), color: get("controls-color"), size: getNum("controls-size") },
     lyrics:      { enabled: getBool("lyrics-enabled"), fontSize: getNum("lyrics-fontSize"), activeColor: get("lyrics-activeColor"), inactiveColor: get("lyrics-inactiveColor"), linesAbove: getNum("lyrics-linesAbove"), linesBelow: getNum("lyrics-linesBelow") },
     layout:    layoutVal,
     animation: animVal,
     background: { color: buildRgba(get("bg-color-picker"), getNum("bg-opacity")), blur: getNum("bg-blur") },
+    card:      { borderRadius: getNum("card-borderRadius"), maxWidth: getNum("card-maxWidth") },
     font:      currentFont,
   };
 }
