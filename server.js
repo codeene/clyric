@@ -14,7 +14,7 @@ const os           = require('os');
 const PORT         = 8888;
 const OBS_PORT     = 8889;
 const DOMAIN       = 'localhost';
-const REDIRECT_URI = `https://${DOMAIN}:${PORT}/callback`;
+const REDIRECT_URI = `http://127.0.0.1:${OBS_PORT}/callback`;
 const SCOPES       = 'user-read-currently-playing user-read-playback-state';
 
 // When bundled with pkg, __dirname is read-only (inside the snapshot).
