@@ -1,6 +1,6 @@
 # Now Playing — Spotify OBS Overlay
 
-A real-time Spotify now-playing overlay for OBS with synced lyrics, customizable fonts, and a live config UI. Credit to @_jsca for the idea :3
+A real-time Spotify now-playing overlay for OBS with synced lyrics, customizable fonts, and a live config UI. Credit to [@_jsca](https://x.com/_jsca) for the idea :3
 
 ---
 
