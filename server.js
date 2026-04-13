@@ -13,8 +13,9 @@ const os           = require('os');
 
 const PORT         = 8888;
 const OBS_PORT     = 8889;
+const AUTH_PORT    = 8890;
 const DOMAIN       = 'localhost';
-const REDIRECT_URI = `https://${DOMAIN}:${PORT}/callback`;
+const REDIRECT_URI = `http://${DOMAIN}:${AUTH_PORT}/callback`;
 const SCOPES       = 'user-read-currently-playing user-read-playback-state';
 
 // When bundled with pkg, __dirname is read-only (inside the snapshot).
@@ -569,13 +570,16 @@ firstRunSetup().then(() => {
     cert: fs.readFileSync(CERT_FILE),
   };
 
-  // HTTPS server — Spotify auth, setup, config
+  // HTTPS server — setup, config
   const httpsServer = https.createServer(sslOptions, app);
   // HTTP server — OBS browser source (CEF doesn't trust local certs)
   const httpServer  = http.createServer(app);
+  // HTTP server — Spotify OAuth callback (Spotify rejects self-signed HTTPS redirect URIs)
+  const authServer  = http.createServer(app);
 
   httpsServer.listen(PORT, () => {
     httpServer.listen(OBS_PORT, () => {
+      authServer.listen(AUTH_PORT, () => {
       console.log(`\n🎵 Spotify Overlay`);
       console.log(`   Setup  : https://${DOMAIN}:${PORT}/setup`);
       console.log(`   Config : https://${DOMAIN}:${PORT}/config`);
@@ -596,6 +600,7 @@ firstRunSetup().then(() => {
       } catch {
         console.log(`   Open ${startUrl} in your browser.\n`);
       }
+      });
     });
   });
 }).catch(err => {
