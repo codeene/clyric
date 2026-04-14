@@ -54,7 +54,7 @@ const DEFAULT_SETTINGS = {
   album:       { enabled: false, fontSize: 13, color: '#888888' },
   progressBar: { enabled: true,  color: '#1db954' },
   controls:    { enabled: true,  color: '#ffffff', size: 22 },
-  lyrics:      { enabled: true,  fontSize: 15, activeColor: '#ffffff', inactiveColor: '#555555', linesAbove: 2, linesBelow: 2 },
+  lyrics:      { enabled: true,  fontSize: 15, activeColor: '#ffffff', inactiveColor: '#555555', linesAbove: 2, linesBelow: 2, textAlign: 'left' },
   layout:      'horizontal',
   background:  { color: 'rgba(10,10,15,0.85)', blur: 12 },
   card:        { borderRadius: 16, maxWidth: 720 },

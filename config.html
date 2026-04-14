@@ -649,6 +649,14 @@ input[type=range]::-webkit-slider-thumb {
             </div>
           </div>
           <div class="row">
+            <div class="row-label">Alignment</div>
+            <div class="row-right chips" id="lyrics-align-chips">
+              <button class="chip active" data-val="left">Left</button>
+              <button class="chip" data-val="center">Center</button>
+              <button class="chip" data-val="right">Right</button>
+            </div>
+          </div>
+          <div class="row">
             <div class="row-label">Lines Above</div>
             <div class="row-right">
               <input type="number" class="num-input" id="lyrics-linesAbove" min="0" max="5" value="2">
@@ -767,8 +775,9 @@ const FONTS = {
 let settings = {};
 let saveTimer = null;
 let currentFont = "Default";
-let layoutVal = "horizontal";
-let animVal   = "slide";
+let layoutVal   = "horizontal";
+let animVal     = "slide";
+let lyricsAlign = "left";
 let currentProfile = 1;
 
 const indicator = document.getElementById("save-indicator");
@@ -844,8 +853,9 @@ function setupChips(containerId, onChange) {
   });
 }
 
-setupChips("layout-chips", v => layoutVal = v);
-setupChips("animation-chips", v => animVal = v);
+setupChips("layout-chips",      v => layoutVal   = v);
+setupChips("animation-chips",   v => animVal     = v);
+setupChips("lyrics-align-chips",v => lyricsAlign = v);
 
 // ── Color swatches ────────────────────────────────────────────
 function syncSwatch(inputId, btnId) {
@@ -945,6 +955,8 @@ function populateUI(s) {
   set("lyrics-inactiveColor",        s.lyrics.inactiveColor);
   set("lyrics-linesAbove",           s.lyrics.linesAbove);
   set("lyrics-linesBelow",           s.lyrics.linesBelow);
+  lyricsAlign = s.lyrics.textAlign || "left";
+  document.querySelectorAll("#lyrics-align-chips .chip").forEach(c => c.classList.toggle("active", c.dataset.val === lyricsAlign));
   syncSliderVal("lyrics-fontSize");
   document.getElementById("lyrics-activeColor-btn").style.background   = s.lyrics.activeColor;
   document.getElementById("lyrics-inactiveColor-btn").style.background = s.lyrics.inactiveColor;
@@ -991,7 +1003,7 @@ function collectSettings() {
     album:       { enabled: getBool("album-enabled"),       fontSize: getNum("album-fontSize"),  color: get("album-color") },
     progressBar: { enabled: getBool("progressBar-enabled"), color: get("progressBar-color") },
     controls:    { enabled: getBool("controls-enabled"), color: get("controls-color"), size: getNum("controls-size") },
-    lyrics:      { enabled: getBool("lyrics-enabled"), fontSize: getNum("lyrics-fontSize"), activeColor: get("lyrics-activeColor"), inactiveColor: get("lyrics-inactiveColor"), linesAbove: getNum("lyrics-linesAbove"), linesBelow: getNum("lyrics-linesBelow") },
+    lyrics:      { enabled: getBool("lyrics-enabled"), fontSize: getNum("lyrics-fontSize"), activeColor: get("lyrics-activeColor"), inactiveColor: get("lyrics-inactiveColor"), linesAbove: getNum("lyrics-linesAbove"), linesBelow: getNum("lyrics-linesBelow"), textAlign: lyricsAlign },
     layout:    layoutVal,
     animation: animVal,
     background: { color: buildRgba(get("bg-color-picker"), getNum("bg-opacity")), blur: getNum("bg-blur") },

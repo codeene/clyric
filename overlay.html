@@ -171,7 +171,6 @@
 
   .lyric-line.active {
     transform: scale(1.04);
-    transform-origin: left center;
   }
 
   /* ── Vertical layout ── */
@@ -212,7 +211,7 @@
         <!-- Next -->
         <button class="ctrl-btn" id="ctrl-next">
           <svg id="ctrl-next-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 18l8.5-6L6 6v12zm2.5-6 5.5 3.9V8.1L8.5 12zM16 6v12h2V6h-2z"/>
+            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
           </svg>
         </button>
       </div>
@@ -309,6 +308,7 @@
     progFill.style.background  = s.progressBar.color;
 
     lyricsWrap.style.display = s.lyrics.enabled ? "" : "none";
+    lyricsInner.style.textAlign = s.lyrics.textAlign || "left";
     renderLyrics();
   }
 
@@ -396,9 +396,10 @@
 
   function applyLyricStyles() {
     if (!lyricsInner.children.length) return;
-    const s     = settings.lyrics;
-    const above = s.linesAbove ?? 2;
-    const idx   = currentLyricIndex < 0 ? 0 : currentLyricIndex;
+    const s      = settings.lyrics;
+    const above  = s.linesAbove ?? 2;
+    const idx    = currentLyricIndex < 0 ? 0 : currentLyricIndex;
+    const origin = (s.textAlign === "center") ? "center center" : (s.textAlign === "right") ? "right center" : "left center";
 
     // Translate strip so active line sits at the `above`-th visible slot
     const translateY = -(idx * lyricsLineHeight) + (above * lyricsLineHeight);
@@ -412,10 +413,11 @@
       const inWindow = i >= visibleStart && i <= visibleEnd;
       const isActive = dist === 0;
       el.classList.toggle("active", isActive);
-      el.style.fontSize   = (isActive ? s.fontSize * 1.08 : s.fontSize) + "px";
-      el.style.color      = isActive ? s.activeColor : s.inactiveColor;
-      el.style.opacity    = inWindow ? (isActive ? 1 : Math.max(0.2, 1 - Math.abs(dist) * 0.28)) : "0";
-      el.style.fontWeight = isActive ? "600" : "400";
+      el.style.fontSize        = (isActive ? s.fontSize * 1.08 : s.fontSize) + "px";
+      el.style.color           = isActive ? s.activeColor : s.inactiveColor;
+      el.style.opacity         = inWindow ? (isActive ? 1 : Math.max(0.2, 1 - Math.abs(dist) * 0.28)) : "0";
+      el.style.fontWeight      = isActive ? "600" : "400";
+      el.style.transformOrigin = origin;
     });
   }
 
