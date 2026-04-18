@@ -52,7 +52,7 @@ const DEFAULT_SETTINGS = {
   title:       { enabled: true,  fontSize: 22, color: '#ffffff' },
   artist:      { enabled: true,  fontSize: 15, color: '#b3b3b3' },
   album:       { enabled: false, fontSize: 13, color: '#888888' },
-  progressBar: { enabled: true,  color: '#1db954' },
+  progressBar: { enabled: true,  color: '#1db954', showTimeRemaining: false },
   controls:    { enabled: true,  color: '#ffffff', size: 22 },
   lyrics:      { enabled: true,  fontSize: 15, activeColor: '#ffffff', inactiveColor: '#555555', linesAbove: 2, linesBelow: 2, textAlign: 'left' },
   layout:      'horizontal',
@@ -60,6 +60,28 @@ const DEFAULT_SETTINGS = {
   card:        { borderRadius: 16, maxWidth: 720 },
   animation:   'slide',
   font:        'Default',
+  animations: {
+    albumArtStyle: 'normal',   // normal | vinyl | float | glow | reflection | kenburns
+    songChange:    'slide',    // fade | slide | flip | blur | glitch
+    background:    'none',     // none | gradient | bokeh | grain
+    progressStyle: 'normal',   // normal | shimmer | glow | gradient
+    lyricsEffect:  'normal',   // normal | wave
+    ambientColor:  false,
+    autoColor:     false,      // auto-tint title/artist/progress from album art
+    bpmPulse:      false,      // pulse card to beat (uses Spotify audio features)
+    borderGlow:    false,      // animated ambient glow border around card
+    confetti:      false,      // confetti burst on song change
+  },
+  position: {
+    preset: 'top-left',        // top-left | top-center | top-right | center-left | center | center-right | bottom-left | bottom-center | bottom-right | custom
+    x: 16,
+    y: 16,
+  },
+  cardStyle:  'frosted',       // frosted | ghost | outlined | solid
+  textEffect: 'none',          // none | shadow | glow | outline
+  eq:      { enabled: false, style: 'classic', placement: 'beside' },
+  marquee: { enabled: false },
+  idle:    { style: 'pulse' }, // hidden | pulse | notes | wave | disc
 };
 
 // ── Certificate generation (pure JS, no elevation needed) ─────────
@@ -401,6 +423,24 @@ app.get('/now-playing', async (req, res) => {
   } catch (err) {
     console.error('Now-playing error:', err);
     res.json({ is_playing: false });
+  }
+});
+
+app.get('/audio-features', async (req, res) => {
+  corsHeaders(res);
+  const { track_id } = req.query;
+  if (!track_id) return res.json({ tempo: null });
+  const token = await ensureFreshToken();
+  if (!token) return res.json({ tempo: null });
+  try {
+    const r = await fetch(`https://api.spotify.com/v1/audio-features/${track_id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!r.ok) return res.json({ tempo: null });
+    const data = await r.json();
+    res.json({ tempo: data.tempo ?? null });
+  } catch {
+    res.json({ tempo: null });
   }
 });
 
